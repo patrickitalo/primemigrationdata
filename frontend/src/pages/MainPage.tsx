@@ -591,18 +591,19 @@ function TabConexao({ form, errors, onField, onSelectDB }: TabConexaoProps) {
             </Field>
           </div>
           <Field label="Caminho do Banco" error={errors.path}>
-            <div className="flex gap-2">
-              <Inp
-                hasError={!!errors.path}
-                placeholder="C:\Dados\database.fdb"
-                value={form.path}
-                onChange={e => onField('path', e.target.value)}
-                className="flex-1"
-              />
+            <div className="flex gap-2 items-center">
+              <div className="flex-1 min-w-0">
+                <Inp
+                  hasError={!!errors.path}
+                  placeholder="C:\Dados\database.fdb"
+                  value={form.path}
+                  onChange={e => onField('path', e.target.value)}
+                />
+              </div>
               <button
                 type="button"
                 onClick={onSelectDB}
-                title="Selecionar arquivo"
+                title="Selecionar arquivo .fdb"
                 className="h-10 px-3 rounded border flex items-center gap-1.5 text-sm font-medium flex-shrink-0 transition-colors"
                 style={{ backgroundColor: '#ebecf0', color: '#42526e', border: '1px solid #c1c7d0' }}
                 onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#dfe1e6')}
