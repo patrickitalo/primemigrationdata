@@ -179,7 +179,7 @@ export default function MainPage({ session, onLogout, onStartMigration }: Props)
       },
       options: form.selectedOptions,
       mode: form.mode,
-      v_vencido: form.vVencido || undefined,
+      v_vencido: form.vVencido !== '' ? form.vVencido : undefined,
       excel_path: form.excelPath,
       alias_pharmacie: form.alias,
       ipserver_pharmacie: form.ipServer,
@@ -341,12 +341,15 @@ export default function MainPage({ session, onLogout, onStartMigration }: Props)
                   <section className="bg-white rounded border border-[#dfe1e6] shadow-sm p-6">
                     <h2 className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#737685' }}>OPÇÕES FCERTA</h2>
                     <div className="space-y-4">
-                      <Field label="Data de Vencimento (vVencido)" hint="Ex: 31/12/2023 — deixe em branco para ignorar">
-                        <Inp
-                          placeholder="dd/mm/aaaa"
+                      <Field label="vVencido" hint="Controla o filtro de vencimento aplicado na migração FCERTA">
+                        <Sel
                           value={form.vVencido}
                           onChange={e => setField('vVencido', e.target.value)}
-                        />
+                        >
+                          <option value="">Não usar</option>
+                          <option value="0">0</option>
+                          <option value="-1">-1</option>
+                        </Sel>
                       </Field>
                       <div className="pt-3 border-t border-[#ebecf0] flex items-start gap-2 text-xs" style={{ color: '#434654' }}>
                         <svg className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#0052cc' }} viewBox="0 0 24 24" fill="currentColor">
