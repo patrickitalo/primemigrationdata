@@ -152,6 +152,13 @@ export default function MainPage({ session, onLogout, onStartMigration }: Props)
     } catch { /* user cancelled */ }
   }
 
+  async function handleSelectPharmacieDB() {
+    try {
+      const path = await SelectDBFile()
+      if (path) setField('alias', path)
+    } catch { /* user cancelled */ }
+  }
+
   async function handleSelectExcel() {
     try {
       const path = await SelectExcelFile()
@@ -299,7 +306,7 @@ export default function MainPage({ session, onLogout, onStartMigration }: Props)
             </div>
 
             {activeTab === 'conexao' && (
-              <TabConexao form={form} errors={errors} onField={setField} onSelectDB={handleSelectDB} />
+              <TabConexao form={form} errors={errors} onField={setField} onSelectDB={handleSelectDB} onSelectPharmacieDB={handleSelectPharmacieDB} />
             )}
             {activeTab === 'opcoes' && (
               <TabOpcoes
@@ -557,9 +564,10 @@ interface TabConexaoProps {
   errors: Record<string, string>
   onField: <K extends keyof FormState>(k: K, v: FormState[K]) => void
   onSelectDB: () => void
+  onSelectPharmacieDB: () => void
 }
 
-function TabConexao({ form, errors, onField, onSelectDB }: TabConexaoProps) {
+function TabConexao({ form, errors, onField, onSelectDB, onSelectPharmacieDB }: TabConexaoProps) {
   return (
     <div className="space-y-6">
       {/* Identificação */}
@@ -641,8 +649,26 @@ function TabConexao({ form, errors, onField, onSelectDB }: TabConexaoProps) {
         <div className="space-y-6">
           <div className="grid grid-cols-4 gap-6">
             <Field label="Alias" error={errors.alias} className="col-span-3">
-              <Inp hasError={!!errors.alias} placeholder="pharmacie" value={form.alias}
-                onChange={e => onField('alias', e.target.value)} />
+              <div className="flex gap-2 items-center">
+                <div className="flex-1 min-w-0">
+                  <Inp hasError={!!errors.alias} placeholder="pharmacie" value={form.alias}
+                    onChange={e => onField('alias', e.target.value)} />
+                </div>
+                <button
+                  type="button"
+                  onClick={onSelectPharmacieDB}
+                  title="Selecionar arquivo .fdb"
+                  className="h-10 px-3 rounded border flex items-center gap-1.5 text-sm font-medium flex-shrink-0 transition-colors"
+                  style={{ backgroundColor: '#ebecf0', color: '#42526e', border: '1px solid #c1c7d0' }}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#dfe1e6')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#ebecf0')}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7a2 2 0 012-2h3l2 2h7a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                  </svg>
+                  Procurar
+                </button>
+              </div>
             </Field>
             <Field label="Porta">
               <Inp placeholder="3050" value={form.porta}
