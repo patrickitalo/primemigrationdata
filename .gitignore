@@ -1,0 +1,47 @@
+# Build artifacts
+/dist/
+/bin/
+build/bin/
+*.exe
+
+# Go modules (go.sum deve ser commitado)
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# SQLite local config
+config.db
+*.db
+
+# DSN do histórico central (credenciais)
+central.json
+.env
+
+# Logs
+migration.log
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Firebird databases locais
+*.FDB
+*.fdb
+
+# Python
+python/**/__pycache__/
+**/__pycache__/
+**/.venv/
+**/.prime_migration_login.json
+python/build/
+python/dist/
+python/*.spec.bak
+*.pyc
