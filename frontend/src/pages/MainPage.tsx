@@ -19,6 +19,17 @@ const SYSTEMS = [
   'SISTEMA10', 'SISTEMA11', 'SISTEMA12', 'SISTEMA13',
 ]
 
+const OPTION_DESCRIPTIONS: Record<string, string> = {
+  CLIENTES:           'Base cadastral completa de clientes',
+  MEDICOS:            'Registros de CRM e especialidades',
+  FORNECEDORES:       'Lista de parceiros e contatos comerciais',
+  PRODUTOS:           'SKUs, categorias e precificação',
+  LOTES:              'Rastreabilidade e datas de validade',
+  FORMA_FARMACEUTICA: 'Formas de apresentação dos produtos',
+  PRODUCAO_INTERNA:   'Ordens de serviço e fabricação',
+  REFAZER:            'ATENÇÃO: Sobrescreve transações existentes',
+}
+
 type TabKey = 'conexao' | 'opcoes' | 'migrar'
 
 interface FormState {
@@ -291,7 +302,6 @@ export default function MainPage({ session, onLogout, onStartMigration }: Props)
                 historyStatus={historyStatus}
                 onToggleOption={toggleOption}
                 onField={setField}
-                onSelectExcel={handleSelectExcel}
               />
             )}
             {activeTab === 'migrar' && (
@@ -308,28 +318,106 @@ export default function MainPage({ session, onLogout, onStartMigration }: Props)
 
           {/* Right: sidebar */}
           <aside className="col-span-4 space-y-4">
-            <div className="bg-white rounded border border-[#dfe1e6] shadow-sm overflow-hidden">
-              <div className="p-6">
-                {activeTab === 'conexao' && (
-                  <>
+
+            {/* ── Conexão tab sidebar ── */}
+            {activeTab === 'conexao' && (
+              <>
+                <div className="bg-white rounded border border-[#dfe1e6] shadow-sm overflow-hidden">
+                  <div className="p-6">
                     <h3 className="font-bold mb-2 text-lg" style={{ color: '#172b4d' }}>Configuração de Conexão</h3>
                     <p className="text-sm mb-6" style={{ color: '#5e6c84' }}>Preencha os dados de origem Firebird e destino Pharmacie para avançar.</p>
                     <SidebarBtn onClick={() => setActiveTab('opcoes')} label="Continuar para Opções" />
-                  </>
+                  </div>
+                  <SummaryStrip form={form} />
+                </div>
+                <QuickHelp />
+              </>
+            )}
+
+            {/* ── Opções tab sidebar ── */}
+            {activeTab === 'opcoes' && (
+              <>
+                {form.system === 'FCERTA' && (
+                  <section className="bg-white rounded border border-[#dfe1e6] shadow-sm p-6">
+                    <h2 className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#737685' }}>OPÇÕES FCERTA</h2>
+                    <div className="space-y-4">
+                      <Field label="Data de Vencimento (vVencido)" hint="Ex: 31/12/2023 — deixe em branco para ignorar">
+                        <Inp
+                          placeholder="dd/mm/aaaa"
+                          value={form.vVencido}
+                          onChange={e => setField('vVencido', e.target.value)}
+                        />
+                      </Field>
+                      <div className="pt-3 border-t border-[#ebecf0] flex items-start gap-2 text-xs" style={{ color: '#434654' }}>
+                        <svg className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#0052cc' }} viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                        </svg>
+                        <p>As configurações de data afetam apenas os registros financeiros vinculados às entidades selecionadas.</p>
+                      </div>
+                    </div>
+                  </section>
                 )}
-                {activeTab === 'opcoes' && (
-                  <>
-                    <h3 className="font-bold mb-2 text-lg" style={{ color: '#172b4d' }}>Opções de Migração</h3>
-                    <p className="text-sm mb-6" style={{ color: '#5e6c84' }}>
-                      {form.selectedOptions.length === 0
-                        ? 'Selecione as entidades e o modo de migração.'
-                        : `${form.selectedOptions.length} entidade(s) selecionada(s). Modo: ${form.mode}.`}
-                    </p>
-                    <SidebarBtn onClick={() => setActiveTab('migrar')} label="Continuar para Migrar" />
-                  </>
+
+                {form.system === 'PRISMA5' && (
+                  <section className="bg-white rounded border border-[#dfe1e6] shadow-sm p-6">
+                    <h2 className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#737685' }}>OPÇÕES PRISMA5</h2>
+                    <Field label="Planilha de Grupos (Excel)">
+                      <div className="flex gap-2">
+                        <Inp
+                          className="flex-1"
+                          placeholder="Nenhum arquivo selecionado"
+                          readOnly
+                          value={form.excelPath ? form.excelPath.split(/[\\/]/).pop() ?? '' : ''}
+                        />
+                        <button
+                          onClick={handleSelectExcel}
+                          className="px-4 h-10 rounded text-sm font-semibold flex items-center gap-2 flex-shrink-0 transition-colors"
+                          style={{ backgroundColor: '#ebecf0', color: '#42526e', border: '1px solid #c1c7d0' }}
+                          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#dfe1e6')}
+                          onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#ebecf0')}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                          Selecionar
+                        </button>
+                      </div>
+                    </Field>
+                  </section>
                 )}
-                {activeTab === 'migrar' && (
-                  <>
+
+                {/* Blue CTA card */}
+                <section
+                  className="rounded-xl p-6 shadow-lg relative overflow-hidden"
+                  style={{ backgroundColor: '#0052cc', color: 'white' }}
+                >
+                  {/* Decorative rocket */}
+                  <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none">
+                    <svg className="w-28 h-28" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M13.13 22.19L11.5 18.36C13.07 17.78 14.54 17 15.9 16.09L13.13 22.19M5.64 12.5L1.81 10.87L7.91 8.1C7 9.46 6.22 10.93 5.64 12.5M19.22 4C19.5 4.78 19.75 5.57 19.87 6.38C19.75 5.57 19.5 4.78 19.22 4M21 3L2.97 9.63C1.8 10.1 1.78 11.73 2.95 12.23L5.86 13.44L7.07 18.71C7.36 19.88 8.77 20.27 9.62 19.42L11.53 17.51C13.21 18.31 15.05 18.79 16.96 18.79C18.42 18.79 19.82 18.51 21.1 18.01L21.1 3H21Z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-bold mb-2">Pronto para iniciar?</h3>
+                  <p className="text-sm mb-6 opacity-90">Revise suas escolhas. Uma vez iniciada, a migração não deve ser interrompida para garantir a integridade dos dados.</p>
+                  <button
+                    onClick={() => setActiveTab('migrar')}
+                    className="w-full bg-white font-bold py-3 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+                    style={{ color: '#003d9b' }}
+                  >
+                    Continuar para Migração
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </button>
+                </section>
+              </>
+            )}
+
+            {/* ── Migrar tab sidebar ── */}
+            {activeTab === 'migrar' && (
+              <>
+                <div className="bg-white rounded border border-[#dfe1e6] shadow-sm overflow-hidden">
+                  <div className="p-6">
                     <h3 className="font-bold mb-2 text-lg" style={{ color: '#172b4d' }}>Pronto para iniciar?</h3>
                     <p className="text-sm mb-6" style={{ color: '#5e6c84' }}>Verifique se todas as informações estão corretas antes de migrar.</p>
                     <button
@@ -346,43 +434,12 @@ export default function MainPage({ session, onLogout, onStartMigration }: Props)
                       </svg>
                       Iniciar Migração
                     </button>
-                  </>
-                )}
-              </div>
-
-              {/* Summary strip */}
-              <div className="px-6 py-4 border-t space-y-1.5" style={{ backgroundColor: '#f4f5f7', borderColor: '#ebecf0' }}>
-                {form.clientCode && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs" style={{ color: '#5e6c84' }}>Cliente</span>
-                    <span className="text-xs font-semibold" style={{ color: '#172b4d' }}>{form.clientCode}</span>
                   </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <span className="text-xs" style={{ color: '#5e6c84' }}>Sistema</span>
-                  <span className="text-xs font-semibold" style={{ color: '#172b4d' }}>{form.system}</span>
+                  <SummaryStrip form={form} />
                 </div>
-                {form.selectedOptions.length > 0 && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs" style={{ color: '#5e6c84' }}>Entidades</span>
-                    <span className="text-xs font-semibold" style={{ color: '#172b4d' }}>{form.selectedOptions.length} selecionada(s)</span>
-                  </div>
-                )}
-              </div>
-            </div>
+              </>
+            )}
 
-            {/* Quick help */}
-            <div className="rounded p-4" style={{ backgroundColor: 'rgba(222,235,255,0.3)', border: '1px solid rgba(0,82,204,0.2)' }}>
-              <h4 className="text-xs font-bold uppercase mb-2" style={{ color: '#0052cc' }}>Ajuda rápida</h4>
-              <ul className="space-y-2">
-                {['Como configurar o Firebird?', 'Verificar conectividade de rede'].map(text => (
-                  <li key={text} className="flex items-center gap-2 text-xs" style={{ color: '#5e6c84' }}>
-                    <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ backgroundColor: '#0052cc' }} />
-                    {text}
-                  </li>
-                ))}
-              </ul>
-            </div>
           </aside>
 
         </div>
@@ -425,7 +482,46 @@ export default function MainPage({ session, onLogout, onStartMigration }: Props)
   )
 }
 
-// ─── Sidebar button ────────────────────────────────────────────────────────────
+// ─── Sidebar helpers ───────────────────────────────────────────────────────────
+
+function SummaryStrip({ form }: { form: FormState }) {
+  return (
+    <div className="px-6 py-4 border-t space-y-1.5" style={{ backgroundColor: '#f4f5f7', borderColor: '#ebecf0' }}>
+      {form.clientCode && (
+        <div className="flex items-center justify-between">
+          <span className="text-xs" style={{ color: '#5e6c84' }}>Cliente</span>
+          <span className="text-xs font-semibold" style={{ color: '#172b4d' }}>{form.clientCode}</span>
+        </div>
+      )}
+      <div className="flex items-center justify-between">
+        <span className="text-xs" style={{ color: '#5e6c84' }}>Sistema</span>
+        <span className="text-xs font-semibold" style={{ color: '#172b4d' }}>{form.system}</span>
+      </div>
+      {form.selectedOptions.length > 0 && (
+        <div className="flex items-center justify-between">
+          <span className="text-xs" style={{ color: '#5e6c84' }}>Entidades</span>
+          <span className="text-xs font-semibold" style={{ color: '#172b4d' }}>{form.selectedOptions.length} selecionada(s)</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function QuickHelp() {
+  return (
+    <div className="rounded p-4" style={{ backgroundColor: 'rgba(222,235,255,0.3)', border: '1px solid rgba(0,82,204,0.2)' }}>
+      <h4 className="text-xs font-bold uppercase mb-2" style={{ color: '#0052cc' }}>Ajuda rápida</h4>
+      <ul className="space-y-2">
+        {['Como configurar o Firebird?', 'Verificar conectividade de rede'].map(text => (
+          <li key={text} className="flex items-center gap-2 text-xs" style={{ color: '#5e6c84' }}>
+            <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ backgroundColor: '#0052cc' }} />
+            {text}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
 
 function SidebarBtn({ onClick, label }: { onClick: () => void; label: string }) {
   return (
@@ -539,45 +635,64 @@ interface TabOpcoesProps {
   historyStatus: HistoryStatus
   onToggleOption: (code: string) => void
   onField: <K extends keyof FormState>(k: K, v: FormState[K]) => void
-  onSelectExcel: () => void
 }
 
-function TabOpcoes({ form, optionDefs, errors, historyStatus, onToggleOption, onField, onSelectExcel }: TabOpcoesProps) {
+function TabOpcoes({ form, optionDefs, errors, historyStatus, onToggleOption, onField }: TabOpcoesProps) {
   const incrementalDisabled = !historyStatus.connected
 
   return (
     <div className="space-y-6">
       {/* Entities */}
-      <Section title="ENTIDADES PARA MIGRAR">
-        {errors.options && <p className="text-[11px] font-medium mb-2" style={{ color: '#de350b' }}>{errors.options}</p>}
+      <section className="bg-white rounded-xl border border-[#c3c6d6] p-6 shadow-sm">
+        <div className="flex flex-col mb-5">
+          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#737685' }}>ENTIDADES PARA MIGRAR</span>
+          {errors.options && (
+            <span className="text-xs font-medium mt-1" style={{ color: '#ba1a1a' }}>{errors.options}</span>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-3">
           {optionDefs.map(opt => {
             const checked = form.selectedOptions.includes(opt.code)
+            const isRefazer = opt.code.toUpperCase().includes('REFAZER')
+            const desc = OPTION_DESCRIPTIONS[opt.code.toUpperCase()] ?? ''
             return (
               <label
                 key={opt.code}
-                className="flex items-center gap-3 px-3 py-2.5 rounded border cursor-pointer transition-colors"
+                className={`group flex items-center p-4 border rounded-lg cursor-pointer transition-all ${
+                  isRefazer ? 'col-span-2 border-dashed' : ''
+                }`}
                 style={{
-                  borderColor: checked ? '#0052cc' : '#c1c7d0',
-                  backgroundColor: checked ? 'rgba(222,235,255,0.3)' : 'white',
+                  borderColor: checked ? '#0052cc' : '#c3c6d6',
+                  backgroundColor: checked ? 'rgba(0,82,204,0.05)' : isRefazer ? '#f3f4f6' : 'white',
                 }}
               >
                 <input
                   type="checkbox"
-                  className="w-4 h-4 rounded cursor-pointer"
+                  className="w-5 h-5 rounded mr-4 flex-shrink-0 cursor-pointer"
                   style={{ accentColor: '#0052cc' }}
                   checked={checked}
                   onChange={() => onToggleOption(opt.code)}
                 />
-                <span className="text-sm" style={{ color: '#172b4d' }}>{opt.name}</span>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-semibold" style={{ color: '#191c1e' }}>{opt.name}</span>
+                  {desc && (
+                    <span
+                      className="text-xs mt-0.5"
+                      style={{ color: isRefazer ? '#ba1a1a' : '#434654', fontWeight: isRefazer ? 600 : 400 }}
+                    >
+                      {desc}
+                    </span>
+                  )}
+                </div>
               </label>
             )
           })}
         </div>
-      </Section>
+      </section>
 
       {/* Mode */}
-      <Section title="MODO DE MIGRAÇÃO">
+      <section className="bg-white rounded-xl border border-[#c3c6d6] p-6 shadow-sm">
+        <span className="text-xs font-bold uppercase tracking-widest block mb-5" style={{ color: '#737685' }}>MODO DE MIGRAÇÃO</span>
         <div className="grid grid-cols-2 gap-4">
           {(['COMPLETA', 'INCREMENTAL'] as const).map(mode => {
             const disabled = mode === 'INCREMENTAL' && incrementalDisabled
@@ -585,12 +700,14 @@ function TabOpcoes({ form, optionDefs, errors, historyStatus, onToggleOption, on
             return (
               <label
                 key={mode}
-                className="flex items-start gap-3 p-4 rounded border cursor-pointer transition-colors"
+                className="relative flex p-5 rounded-xl cursor-pointer transition-all"
                 style={{
-                  borderColor: active ? '#0052cc' : '#c1c7d0',
-                  backgroundColor: active ? 'rgba(222,235,255,0.3)' : 'white',
-                  opacity: disabled ? 0.4 : 1,
+                  border: active ? '2px solid #0052cc' : '1px solid #c3c6d6',
+                  backgroundColor: active ? 'rgba(0,82,204,0.05)' : 'white',
+                  opacity: disabled ? 0.45 : 1,
                   cursor: disabled ? 'not-allowed' : 'pointer',
+                  outline: active ? '1px solid rgba(0,82,204,0.3)' : 'none',
+                  outlineOffset: '2px',
                 }}
               >
                 <input
@@ -600,64 +717,34 @@ function TabOpcoes({ form, optionDefs, errors, historyStatus, onToggleOption, on
                   checked={active}
                   disabled={disabled}
                   onChange={() => onField('mode', mode)}
-                  className="mt-0.5 cursor-pointer"
-                  style={{ accentColor: '#0052cc' }}
+                  className="hidden"
                 />
-                <div>
-                  <p className="text-sm font-semibold" style={{ color: '#172b4d' }}>
-                    {mode === 'COMPLETA' ? 'Completa' : 'Incremental'}
-                  </p>
-                  <p className="text-xs mt-0.5" style={{ color: '#5e6c84' }}>
+                <div className="flex flex-col flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-base font-semibold" style={{ color: active ? '#0052cc' : '#191c1e' }}>
+                      {mode === 'COMPLETA' ? 'Completa' : 'Incremental'}
+                    </span>
+                    {active ? (
+                      <svg className="w-5 h-5" style={{ color: '#0052cc' }} viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14l-4-4 1.41-1.41L10 13.17l6.59-6.59L18 8l-8 8z" />
+                      </svg>
+                    ) : (
+                      <span className="w-5 h-5 rounded-full border-2 border-[#c3c6d6]" />
+                    )}
+                  </div>
+                  <p className="text-xs leading-relaxed" style={{ color: '#434654' }}>
                     {mode === 'COMPLETA'
-                      ? 'Migra todos os registros'
+                      ? 'Migra todos os registros selecionados, ignorando estados anteriores.'
                       : disabled
-                        ? 'Requer histórico central conectado'
-                        : 'Pula registros já migrados'}
+                        ? 'Requer histórico central conectado para uso.'
+                        : 'Pula registros já migrados. Recomendado para sincronizações rápidas.'}
                   </p>
                 </div>
               </label>
             )
           })}
         </div>
-      </Section>
-
-      {/* FCERTA extras */}
-      {form.system === 'FCERTA' && (
-        <Section title="OPÇÕES FCERTA">
-          <Field label="Data de Vencimento (vVencido)" hint="Ex: 31/12/2023 — deixe em branco para ignorar">
-            <Inp placeholder="dd/mm/aaaa" value={form.vVencido}
-              onChange={e => onField('vVencido', e.target.value)} />
-          </Field>
-        </Section>
-      )}
-
-      {/* PRISMA5 extras */}
-      {form.system === 'PRISMA5' && (
-        <Section title="OPÇÕES PRISMA5">
-          <Field label="Planilha de Grupos (Excel)">
-            <div className="flex gap-2">
-              <Inp
-                className="flex-1"
-                placeholder="Nenhum arquivo selecionado"
-                readOnly
-                value={form.excelPath ? form.excelPath.split(/[\\/]/).pop() ?? '' : ''}
-              />
-              <button
-                onClick={onSelectExcel}
-                className="px-4 h-10 rounded text-sm font-semibold flex items-center gap-2 flex-shrink-0 transition-colors"
-                style={{ backgroundColor: '#ebecf0', color: '#42526e', border: '1px solid #c1c7d0' }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#dfe1e6')}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#ebecf0')}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-                Selecionar
-              </button>
-            </div>
-          </Field>
-        </Section>
-      )}
+      </section>
     </div>
   )
 }
