@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   GetEnvDefaults, LoadClientConfig, SaveClientConfig,
   GetOptionNames, CheckHistoryStatus, ReconnectHistory,
-  GetLastRunInfo, SelectExcelFile,
+  GetLastRunInfo, SelectExcelFile, SelectDBFile,
 } from '../../wailsjs/go/app/App'
 import { EventsOn } from '../../wailsjs/runtime/runtime'
 import type { models, app } from '../../wailsjs/go/models'
@@ -143,6 +143,13 @@ export default function MainPage({ session, onLogout, onStartMigration }: Props)
     const status = await CheckHistoryStatus()
     setHistoryStatus(status)
     setReconnecting(false)
+  }
+
+  async function handleSelectDB() {
+    try {
+      const path = await SelectDBFile()
+      if (path) setField('path', path)
+    } catch { /* user cancelled */ }
   }
 
   async function handleSelectExcel() {
@@ -292,7 +299,7 @@ export default function MainPage({ session, onLogout, onStartMigration }: Props)
             </div>
 
             {activeTab === 'conexao' && (
-              <TabConexao form={form} errors={errors} onField={setField} />
+              <TabConexao form={form} errors={errors} onField={setField} onSelectDB={handleSelectDB} />
             )}
             {activeTab === 'opcoes' && (
               <TabOpcoes
@@ -549,9 +556,10 @@ interface TabConexaoProps {
   form: FormState
   errors: Record<string, string>
   onField: <K extends keyof FormState>(k: K, v: FormState[K]) => void
+  onSelectDB: () => void
 }
 
-function TabConexao({ form, errors, onField }: TabConexaoProps) {
+function TabConexao({ form, errors, onField, onSelectDB }: TabConexaoProps) {
   return (
     <div className="space-y-6">
       {/* Identificação */}
@@ -583,8 +591,29 @@ function TabConexao({ form, errors, onField }: TabConexaoProps) {
             </Field>
           </div>
           <Field label="Caminho do Banco" error={errors.path}>
-            <Inp hasError={!!errors.path} placeholder="C:\Dados\database.fdb" value={form.path}
-              onChange={e => onField('path', e.target.value)} />
+            <div className="flex gap-2">
+              <Inp
+                hasError={!!errors.path}
+                placeholder="C:\Dados\database.fdb"
+                value={form.path}
+                onChange={e => onField('path', e.target.value)}
+                className="flex-1"
+              />
+              <button
+                type="button"
+                onClick={onSelectDB}
+                title="Selecionar arquivo"
+                className="h-10 px-3 rounded border flex items-center gap-1.5 text-sm font-medium flex-shrink-0 transition-colors"
+                style={{ backgroundColor: '#ebecf0', color: '#42526e', border: '1px solid #c1c7d0' }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#dfe1e6')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#ebecf0')}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7a2 2 0 012-2h3l2 2h7a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                </svg>
+                Procurar
+              </button>
+            </div>
           </Field>
           <div className="grid grid-cols-2 gap-6">
             <Field label="Usuário" error={errors.user}>

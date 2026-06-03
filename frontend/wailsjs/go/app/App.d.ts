@@ -23,6 +23,8 @@ export function ReconnectHistory():Promise<void>;
 
 export function SaveClientConfig(arg1:models.ClientConfig):Promise<void>;
 
+export function SelectDBFile():Promise<string>;
+
 export function SelectExcelFile():Promise<string>;
 
 export function StartMigration(arg1:models.MigrationConfig):Promise<void>;

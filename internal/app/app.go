@@ -207,6 +207,20 @@ func (a *App) SelectExcelFile() (string, error) {
 	return path, nil
 }
 
+func (a *App) SelectDBFile() (string, error) {
+	path, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Selecionar Banco de Dados Firebird",
+		Filters: []runtime.FileFilter{
+			{DisplayName: "Firebird Database (*.fdb;*.gdb)", Pattern: "*.fdb;*.gdb"},
+			{DisplayName: "Todos os arquivos (*.*)", Pattern: "*.*"},
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+	return path, nil
+}
+
 // ─── Migration ──────────────────────────────────────────────────────────────────
 
 type MigrationProgressEvent struct {

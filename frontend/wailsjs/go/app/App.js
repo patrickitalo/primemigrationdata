@@ -42,6 +42,10 @@ export function SaveClientConfig(arg1) {
   return window['go']['app']['App']['SaveClientConfig'](arg1);
 }
 
+export function SelectDBFile() {
+  return window['go']['app']['App']['SelectDBFile']();
+}
+
 export function SelectExcelFile() {
   return window['go']['app']['App']['SelectExcelFile']();
 }
